@@ -58,7 +58,7 @@ func lexer(input string) []Token {
 				Lexeme: identifier,
 			})
 		} else {
-			fmt.Printf("Unexpected character: %s\n", char)
+			fmt.Printf("Unexpected character at pos %d: %s\n", curr_pos, string(char))
 			break
 		}
 	}
@@ -71,9 +71,9 @@ type AstNode struct {
 	Name       string     // function/variable names
 	Callee     *AstNode   // call target for higher order functions
 	Expression *AstNode   // expressions
-	Arguments  []AstNode  // function call arguments, CHANGED
 	Parameters []AstNode  // function definition parameters
 	Body       []AstNode  // function definition body
+	Arguments  *[]AstNode // function call arguments, CHANGED
 	Context    *[]AstNode // used in traversal for execution context
 
 }
@@ -109,13 +109,20 @@ func walk() AstNode {
 			Value:    curr_token.Lexeme,
 		}
 	}
+	if curr_token.Class == "IDENTIFIER" {
+		pc++
+		return AstNode{
+			NodeType: "Identifier",
+			Name:     curr_token.Lexeme,
+		}
+	}
 	if curr_token.Class == "LPAREN" {
 		pc++
 		curr_token = pt[pc]
 		node := AstNode{ // start building CallExpression node
-			NodeType:  "CallExpression",
-			Name:      curr_token.Lexeme,
-			Arguments: []AstNode{},
+			NodeType:   "CallExpression",
+			Name:       curr_token.Lexeme,
+			Parameters: []AstNode{},
 		}
 		pc++
 		curr_token = pt[pc]
@@ -131,6 +138,127 @@ func walk() AstNode {
 	return AstNode{}
 }
 
+// visitor map type for AST traversal, holds functions for each node type
+type visitor map[string]func(n *AstNode, parent *AstNode)
+
+// used by Transformer to convert LISP-like AST to C-like AST
+func traverser(a ast, v visitor) {
+	// entry point for traversal
+	traverseNode(AstNode(a), AstNode{}, v)
+}
+
+func traverseArray(node []AstNode, parent AstNode, v visitor) {
+	for _, child := range node {
+		traverseNode(child, parent, v)
+	}
+}
+
+func traverseNode(node AstNode, parent AstNode, v visitor) {
+	for k, va := range v { // call visitor function if node type matches
+		if node.NodeType == k {
+			va(&node, &parent)
+		}
+	}
+	switch node.NodeType {
+	case "Program":
+		traverseArray(node.Body, node, v)
+	case "CallExpression":
+		traverseArray((node.Parameters), node, v)
+	case "NumberLiteral":
+		break
+	case "Identifier":
+		break
+	default:
+		log.Fatalf("Unknown node type during traversal: %s", node.NodeType)
+	}
+}
+
+// convert LISP-like AST to C-like AST
+func transformer(a ast) ast {
+	newAst := ast{
+		NodeType: "Program",
+		Body:     []AstNode{},
+	}
+
+	// reference from old AST to new AST
+	// specifies where new nodes should be added
+	a.Context = &newAst.Body
+
+	traverser(a, map[string]func(n *AstNode, parent *AstNode){
+		"NumberLiteral": func(n *AstNode, parent *AstNode) {
+			*parent.Context = append(*parent.Context, AstNode{
+				NodeType: "NumberLiteral",
+				Value:    n.Value,
+			})
+		},
+		"CallExpression": func(n *AstNode, parent *AstNode) {
+			expression := AstNode{
+				NodeType: "CallExpression",
+				Callee: &AstNode{
+					NodeType: "Identifier",
+					Name:     n.Name,
+				},
+				Arguments: new([]AstNode),
+			}
+			n.Context = expression.Arguments
+			if parent.NodeType != "CallExpression" {
+				es := AstNode{
+					NodeType:   "ExpressionStatement",
+					Expression: &expression,
+				}
+				*parent.Context = append(*parent.Context, es)
+			} else {
+				*parent.Context = append(*parent.Context, expression)
+			}
+		},
+		"Identifier": func(n *AstNode, parent *AstNode) {
+			*parent.Context = append(*parent.Context, AstNode{
+				NodeType: "Identifier",
+				Name:     n.Name,
+			})
+		},
+	})
+	return newAst
+}
+
+// code generator recursively converts AST to target code
+func generator(n AstNode) string {
+	switch n.NodeType {
+	case "Program":
+		var code []string
+		for _, child := range n.Body {
+			code = append(code, generator(child))
+		}
+		return strings.Join(code, "\n")
+	case "ExpressionStatement":
+		return generator(*n.Expression) + ";"
+	case "CallExpression":
+		// print callee and args in parentheses
+		var code []string
+		c := generator(*n.Callee)
+		for _, arg := range *n.Arguments {
+			code = append(code, generator(arg))
+		}
+		return c + "(" + strings.Join(code, ", ") + ")"
+	case "NumberLiteral":
+		return n.Value
+	case "Identifier":
+		return n.Name
+	default:
+		log.Fatalf("Unknown node type during code generation: %s", n.NodeType)
+		return ""
+	}
+}
+
+// link all compiler steps together
+func compiler(input string) string {
+	tokens := lexer(input)
+	ast := parser(tokens)
+	newAst := transformer(ast)
+	output := generator(AstNode(newAst))
+	return output
+}
+
 // helper function to print AST in readable format
 func printAST(node AstNode, indent int) {
 	prefix := strings.Repeat("  ", indent)
@@ -141,12 +269,29 @@ func printAST(node AstNode, indent int) {
 			printAST(child, indent+1)
 		}
 	case "CallExpression":
-		fmt.Printf("%sCallExpression [%s]\n", prefix, node.Name)
-		for _, arg := range node.Arguments {
-			printAST(arg, indent+1)
+		if node.Name != "" && len(node.Parameters) > 0 {
+			fmt.Printf("%sCallExpression [%s]\n", prefix, node.Name)
+			for _, arg := range node.Parameters {
+				printAST(arg, indent+1)
+			}
+		} else if node.Callee != nil { // for transformed AST
+			fmt.Printf("%sCallExpression\n", prefix)
+			fmt.Printf("%s. Callee:\n", prefix)
+			printAST(*node.Callee, indent+2)
+			if len(*node.Arguments) > 0 {
+				fmt.Printf("%s. Arguments:\n", prefix)
+				for _, arg := range *node.Arguments {
+					printAST(arg, indent+2)
+				}
+			}
 		}
+	case "ExpressionStatement":
+		fmt.Printf("%sExpressionStatement\n", prefix)
+		printAST(*node.Expression, indent+1)
 	case "NumberLiteral":
 		fmt.Printf("%sNumberLiteral [%s]\n", prefix, node.Value)
+	case "Identifier":
+		fmt.Printf("%sIdentifier [%s]\n", prefix, node.Name)
 	default:
 		fmt.Printf("%sUnknown NodeType: %s\n", prefix, node.NodeType)
 	}
@@ -154,12 +299,13 @@ func printAST(node AstNode, indent int) {
 
 func main() {
 	// test lexer
-	testCasesLexer := []string{
+	fmt.Println("=== Lexer Tests ===")
+	testCases := []string{
 		"(add 2 (subtract 4 2))",
 		"(multiply (add 1 2) (divide 6 3))",
 		"(define x 10)",
 	}
-	for _, input := range testCasesLexer {
+	for _, input := range testCases {
 		fmt.Printf("Input: %s\n", input)
 		tokens := lexer(input)
 		for _, token := range tokens {
@@ -169,15 +315,26 @@ func main() {
 	}
 
 	// test parser
-	testCasesParser := []string{
-		"(add 2 (subtract 4 2))",
-		"(multiply (add 1 2) (divide 6 3))",
-		"(define x 10)",
-	}
-	for _, input := range testCasesParser {
+	fmt.Println("=== Parser Tests ===")
+	for _, input := range testCases {
 		fmt.Printf("Input: %s\n", input)
 		tokens := lexer(input)
 		ast := parser(tokens)
 		printAST(AstNode(ast), 0)
+		fmt.Println()
+	}
+
+	// test transformer and generator
+	fmt.Println("=== Transformer and Generator Tests ===")
+	for _, input := range testCases {
+		fmt.Printf("Input: %s\n", input)
+		tokens := lexer(input)
+		ast := parser(tokens)
+		newAst := transformer(ast)
+		fmt.Println("Transformed AST:")
+		printAST(AstNode(newAst), 0)
+		fmt.Println()
+		output := generator(AstNode(newAst))
+		fmt.Printf("Generated Code:\n%s\n\n", output)
 	}
 }

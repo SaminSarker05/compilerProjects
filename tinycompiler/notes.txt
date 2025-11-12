@@ -46,6 +46,10 @@ go does not allow recursive structurs
     have to use pointers
 
 
+transformer
+will create a new AST matching C syntax requirements
+
+
 ------
 
 in Lisp all code is data
@@ -56,3 +60,7 @@ prefix notation for nested lists, expliict precedence
 
 no ambiguous grammar
 
+new callee node in C-style for functions
+
+expressionstatement
+    wrapper for statements in c
