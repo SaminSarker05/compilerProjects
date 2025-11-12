@@ -16,14 +16,12 @@ combining union and kleene star/plus operators for matches.
     If a token cannot be classified, a LexerException is thrown with the
 current line and column number.
 
-To Run:
+to run:
     make
     ./lexer <source-file>
 
-Example:
+example:
     ./lexer test/input/sample1.minilang
-
-
 */
 
 #include "lexer.h"
