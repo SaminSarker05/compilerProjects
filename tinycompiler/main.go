@@ -1,3 +1,29 @@
+/*
+tiny compiler in Go that translates lisp like functional syntax to C-style expressions.
+follows full compilation pipeline: lexing, parsing, transformation, code generation.
+
+lexer: converts input string into token stream
+parser: converts token stream into AST
+transformer: uses vistor pattern to convert LISP-like AST to C-like AST
+generator: outputs C-like code from transformed AST
+
+to run:
+	go run main.go
+
+examples:
+	Input: (multiply (add 1 2) (divide 6 3))
+	Output: multiply(add(1, 2), divide(6, 3));
+
+	Input: (define x 10)
+	Output: define(x, 10);
+
+	Input: (square 5)
+	Output: square(5);
+
+	Input: (add (multiply 2 3) (subtract 5 1))
+	Output: add(multiply(2, 3), subtract(5, 1));
+*/
+
 package main
 
 import (
@@ -304,6 +330,8 @@ func main() {
 		"(add 2 (subtract 4 2))",
 		"(multiply (add 1 2) (divide 6 3))",
 		"(define x 10)",
+		"(square 5)",
+		"(add (multiply 2 3) (subtract 5 1))",
 	}
 	for _, input := range testCases {
 		fmt.Printf("Input: %s\n", input)
@@ -336,5 +364,13 @@ func main() {
 		fmt.Println()
 		output := generator(AstNode(newAst))
 		fmt.Printf("Generated Code:\n%s\n\n", output)
+	}
+
+	// test full compiler
+	fmt.Println("=== Full Compiler Tests ===")
+	for _, input := range testCases {
+		fmt.Printf("Input: %s\n", input)
+		output := compiler(input)
+		fmt.Printf("Output: %s\n\n", output)
 	}
 }

@@ -64,3 +64,27 @@ new callee node in C-style for functions
 
 expressionstatement
     wrapper for statements in c
+
+project
+
+compiles list syntax like code into c-like syntax
+lexing, parsing, transforming, and code generation
+
+lexer
+conversts raw string into a list of tokens categired as LPAREN, RPARENT NUMBER oR IDENTIFIER
+
+parsring
+converts token list into a AST, hierarchy representaiton of pgoram
+
+program
+    callexpression
+        IDENTIFIER
+        numberliteral
+
+
+transformer
+uses visitor pattern to walk through AST nodes and convert into C-style AST
+
+code generation
+produces target language ouput
+c-like syntax
