@@ -1,3 +1,3 @@
-module github.com/SaminSarker05/compilerProjects/tree/main/monkey_Interpreter
+module monkey_interpreter
 
-go 1.24.3
+go 1.20
