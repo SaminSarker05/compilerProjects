@@ -1,6 +1,8 @@
 package lexer
 
-import "gorilla_interpreter/token"
+import (
+	"gorilla_interpreter/token"
+)
 
 type Lexer struct {
 	input        string
@@ -114,11 +116,6 @@ func newToken(tokenType token.TokenType, char byte) token.Token {
 	return token.Token{Type: tokenType, Literal: string(char)}
 }
 
-func isLetter(char byte) bool {
-	// allow _, and ? in identifiers
-	return ('a' <= char && char <= 'z') || ('A' <= char && char <= 'Z') || char == '_' || char == '?'
-}
-
 // reads chars to build identifier until non-letter encountered
 func (l *Lexer) readIdentifier() string {
 	start_pos := l.position
@@ -132,10 +129,6 @@ func (l *Lexer) skipWhiteSpaces() {
 	for l.char == ' ' || l.char == '\t' || l.char == '\n' || l.char == '\r' {
 		l.readChar()
 	}
-}
-
-func isDigit(char byte) bool {
-	return '0' <= char && char <= '9'
 }
 
 // reads chars to build number
