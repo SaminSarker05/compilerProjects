@@ -3,7 +3,7 @@ package lexer
 import (
 	"testing"
 
-	"monkey_interpreter/token"
+	"gorilla_interpreter/token"
 )
 
 func TestNextTokenAll(t *testing.T) { // t holds test state
