@@ -1,0 +1,3 @@
+
+Credits:
+Project inspired from book Writing An Interpreter in Go by Thorsten Ball
