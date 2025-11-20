@@ -19,7 +19,7 @@
 [a-zA-Z_][a-zA-Z0-9_]*      { SAVE_TOKEN; return IDENTIFIER; }
 [0-9]+\.[0-9]*              { SAVE_TOKEN; return DOUBLE; }
 [0-9]+                      { SAVE_TOKEN; return INTEGER; }
-"=="                        { return TOKEN(EQUAL)}
+"=="                        { return TOKEN(EQUAL); }
 "="                         { return TOKEN(ASSIGN); }
 "<"                         { return TOKEN(LT); }
 ">"                         { return TOKEN(GT); }
@@ -33,7 +33,7 @@
 "-"                         { return TOKEN(MINUS); }
 "*"                         { return TOKEN(MUL); }
 "/"                         { return TOKEN(DIV); }
-";"                         { return TOKEN(SEMICOLON) }
+";"                         { return TOKEN(SEMICOLON); }
 .                           { throw LexerException(); }
 
 %%
