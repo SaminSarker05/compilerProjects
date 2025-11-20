@@ -1,0 +1,114 @@
+#ifndef ASTNODE_HPP
+#define ASTNODE_HPP
+
+#include <vector>
+#include <string>
+#include <iostream>
+
+// forward declarations
+class ExprNode;
+class StmtNode;
+class VarDeclNode;
+
+typedef std::vector<ExprNode*> ExprList;
+typedef std::vector<StmtNode*> StmtList;
+typedef std::vector<VarDeclNode*> VarDeclList;
+
+// ast node base class
+class Node {
+public:
+    virtual ~Node() = default;
+};
+
+class ExprNode : public Node {  // produces values
+};
+
+// performs action, does not necessarily produce a value
+class StmtNode : public Node {
+};
+
+class IntegerNode : public ExprNode {
+public:
+    long long value;
+    IntegerNode(long long val) : value(val) {}
+};
+
+class DoubleNode : public ExprNode {
+public:
+    double value;
+    DoubleNode(double val) : value(val) {}
+};
+
+class IdentifierNode : public ExprNode { // names given to variables
+public:
+    std::string name;
+    IdentifierNode(std::string n) : name(n) {}
+};
+
+class MethodCallNode : public ExprNode {
+public:
+    const IdentifierNode& name;
+    ExprList args;
+    MethodCallNode(const IdentifierNode& n, ExprList a) : name(n), args(a) {}
+    MethodCallNode(const IdentifierNode& n) : name(n), args() {}  // for function calls with no arguments
+    ~MethodCallNode() {
+        if (args.size() == 0) return;
+        for (ExprNode* arg : args) delete arg;
+    }
+};
+
+class BinaryOpNode : public ExprNode {
+public:
+    ExprNode& lhs;
+    ExprNode& rhs;
+    std::string op;
+    BinaryOpNode(ExprNode& l, ExprNode& r, std::string o) : lhs(l), rhs(r), op(o) {}
+};
+
+class AssignmentNode : public ExprNode {
+public:
+    IdentifierNode& lhs;
+    ExprNode& rhs;
+    AssignmentNode(IdentifierNode& l, ExprNode& r) : lhs(l), rhs(r) {}
+};
+
+class BlockNode : public ExprNode {
+public:
+    StmtList stmts;
+    BlockNode() {}
+    ~BlockNode() {
+        for (StmtNode* stmt : stmts) delete stmt;
+    }
+};
+
+class VarDeclNode : public StmtNode {
+public:
+    const IdentifierNode& type;
+    IdentifierNode& name;
+    ExprNode* assignmentExpr;
+    // allow declarations without assignment/initialization
+    VarDeclNode(const IdentifierNode& t, IdentifierNode& n) : 
+        type(t), name(n), assignmentExpr(nullptr) {}
+    VarDeclNode(const IdentifierNode& t, IdentifierNode& n, ExprNode* a) : 
+        type(t), name(n), assignmentExpr(a) {}
+    ~VarDeclNode() { 
+        if (assignmentExpr != nullptr) {
+            delete assignmentExpr;
+        }
+    }
+};
+
+class FuncDeclNode : public StmtNode {
+public:
+    const IdentifierNode& type;
+    const IdentifierNode& name;
+    VarDeclList params;
+    BlockNode& body;
+    FuncDeclNode(const IdentifierNode& t, const IdentifierNode& n, VarDeclList p, BlockNode& b) : 
+        type(t), name(n), params(p), body(b) {}
+    ~FuncDeclNode() {;
+        for (VarDeclNode* param : params) delete param;
+    }
+};
+
+#endif
