@@ -8,6 +8,7 @@
 
 
 // forward declarations
+class GenCodeContext;
 class ExprNode;
 class StmtNode;
 class VarDeclNode;
@@ -20,7 +21,7 @@ typedef std::vector<VarDeclNode*> VarDeclList;
 class Node {
 public:
     virtual ~Node() = default;
-    virtual llvm::Value* codeGen(GenCodeContext& context) { }
+    virtual llvm::Value* codeGen(GenCodeContext& context) = 0;
 };
 
 class ExprNode : public Node {  // produces values
@@ -44,6 +45,7 @@ public:
     virtual llvm::Value* codeGen(GenCodeContext& context);
 };
 
+// e.g x
 class IdentifierNode : public ExprNode { // names given to variables
 public:
     std::string name;
@@ -51,6 +53,7 @@ public:
     virtual llvm::Value* codeGen(GenCodeContext& context);
 };
 
+// e.g bar(1, 2);
 class MethodCallNode : public ExprNode {
 public:
     const IdentifierNode& name;
@@ -61,6 +64,7 @@ public:
     virtual llvm::Value* codeGen(GenCodeContext& context);
 };
 
+// e.g a + b;
 class BinaryOpNode : public ExprNode {
 public:
     ExprNode& lhs;
@@ -70,6 +74,7 @@ public:
     virtual llvm::Value* codeGen(GenCodeContext& context);
 };
 
+// e.g x = 5;
 class AssignmentNode : public ExprNode {
 public:
     IdentifierNode& lhs;
@@ -85,6 +90,7 @@ public:
     virtual llvm::Value* codeGen(GenCodeContext& context);
 };
 
+// e.g int x; or int x = 5;
 class VarDeclNode : public StmtNode {
 public:
     const IdentifierNode& type;
@@ -98,14 +104,15 @@ public:
     virtual llvm::Value* codeGen(GenCodeContext& context);
 };
 
+// e.g int add(int a, int b) { return a + b; }
 class FuncDeclNode : public StmtNode {
 public:
-    const IdentifierNode& type;
+    const IdentifierNode& return_type;
     const IdentifierNode& name;
     VarDeclList params;
     BlockNode& body;
     FuncDeclNode(const IdentifierNode& t, const IdentifierNode& n, VarDeclList p, BlockNode& b) : 
-        type(t), name(n), params(p), body(b) {}
+        return_type(t), name(n), params(p), body(b) {}
     virtual llvm::Value* codeGen(GenCodeContext& context);
 };
 
