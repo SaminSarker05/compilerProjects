@@ -33,15 +33,19 @@ public:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::IRBuilder<>> builder;
 
-    void generate_code(BlockNode& root);
-    llvm::GenericValue run_code();
-
     GenCodeContext() {
         context = std::make_unique<llvm::LLVMContext>();
         module = std::make_unique<llvm::Module>("mango", *context);
         builder = std::make_unique<llvm::IRBuilder<>>(*context);
         main_func = nullptr;
     }
+    
+    // generate LLVM IR code for entire program
+    void generate_code(BlockNode& root);
+
+    // execute generated code using JIT compiler
+    llvm::GenericValue run_code();
+
 
     // return current scope and map of local variables
     std::map<std::string, llvm::Value*>& get_locals() {
