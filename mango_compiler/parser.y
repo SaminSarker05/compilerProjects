@@ -60,7 +60,8 @@ stmts
     ;
 
 stmt
-    : var_decl | func_decl
+    : var_decl SEMICOLON
+    | func_decl
     | expr SEMICOLON { $$ = new ExprStmtNode(*$1); }
     ;
 
