@@ -52,17 +52,14 @@ public:
     MethodCallNode(const IdentifierNode& n, ExprList a) : name(n), args(a) {}
     // allow function calls without arguments
     MethodCallNode(const IdentifierNode& n) : name(n), args() {}
-    ~MethodCallNode() {
-        for (ExprNode* arg : args) delete arg;
-    }
 };
 
 class BinaryOpNode : public ExprNode {
 public:
     ExprNode& lhs;
     ExprNode& rhs;
-    std::string op;
-    BinaryOpNode(ExprNode& l, ExprNode& r, std::string o) : lhs(l), rhs(r), op(o) {}
+    int op;
+    BinaryOpNode(ExprNode& l, ExprNode& r, int o) : lhs(l), rhs(r), op(o) {}
 };
 
 class AssignmentNode : public ExprNode {
@@ -76,9 +73,6 @@ class BlockNode : public StmtNode {
 public:
     StmtList stmts;
     BlockNode() {}
-    ~BlockNode() {
-        for (StmtNode* stmt : stmts) delete stmt;
-    }
 };
 
 class VarDeclNode : public StmtNode {
@@ -91,11 +85,6 @@ public:
         type(t), name(n), assignmentExpr(nullptr) {}
     VarDeclNode(const IdentifierNode& t, IdentifierNode& n, ExprNode* a) : 
         type(t), name(n), assignmentExpr(a) {}
-    ~VarDeclNode() { 
-        if (assignmentExpr != nullptr) {
-            delete assignmentExpr;
-        }
-    }
 };
 
 class FuncDeclNode : public StmtNode {
@@ -106,9 +95,12 @@ public:
     BlockNode& body;
     FuncDeclNode(const IdentifierNode& t, const IdentifierNode& n, VarDeclList p, BlockNode& b) : 
         type(t), name(n), params(p), body(b) {}
-    ~FuncDeclNode() {;
-        for (VarDeclNode* param : params) delete param;
-    }
+};
+
+class ExprStmtNode : public StmtNode {
+public:
+    ExprNode& expr;
+    ExprStmtNode(ExprNode& e) : expr(e) {}
 };
 
 #endif

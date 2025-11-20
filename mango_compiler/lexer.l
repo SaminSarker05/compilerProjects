@@ -19,19 +19,21 @@
 [a-zA-Z_][a-zA-Z0-9_]*      { SAVE_TOKEN; return IDENTIFIER; }
 [0-9]+\.[0-9]*              { SAVE_TOKEN; return DOUBLE; }
 [0-9]+                      { SAVE_TOKEN; return INTEGER; }
-"="                         { return TOKEN(TEQUAL); }
-"<"                         { return TOKEN(TCLT); }
-">"                         { return TOKEN(TCGT); }
-"("                         { return TOKEN(TLPAREN); }
-")"                         { return TOKEN(TRPAREN); }
-"{"                         { return TOKEN(TLBRACE); }
-"}"                         { return TOKEN(TRBRACE); }
-"."                         { return TOKEN(TDOT); }
-","                         { return TOKEN(TCOMMA); }
-"+"                         { return TOKEN(TPLUS); }
-"-"                         { return TOKEN(TMINUS); }
-"*"                         { return TOKEN(TMUL); }
-"/"                         { return TOKEN(TDIV); }
+"=="                        { return TOKEN(EQUAL)}
+"="                         { return TOKEN(ASSIGN); }
+"<"                         { return TOKEN(LT); }
+">"                         { return TOKEN(GT); }
+"("                         { return TOKEN(LPAREN); }
+")"                         { return TOKEN(RPAREN); }
+"{"                         { return TOKEN(LBRACE); }
+"}"                         { return TOKEN(RBRACE); }
+"."                         { return TOKEN(DOT); }
+","                         { return TOKEN(COMMA); }
+"+"                         { return TOKEN(PLUS); }
+"-"                         { return TOKEN(MINUS); }
+"*"                         { return TOKEN(MUL); }
+"/"                         { return TOKEN(DIV); }
+";"                         { return TOKEN(SEMICOLON) }
 .                           { throw LexerException(); }
 
 %%
