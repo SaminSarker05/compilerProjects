@@ -50,9 +50,9 @@ public:
     const IdentifierNode& name;
     ExprList args;
     MethodCallNode(const IdentifierNode& n, ExprList a) : name(n), args(a) {}
-    MethodCallNode(const IdentifierNode& n) : name(n), args() {}  // for function calls with no arguments
+    // allow function calls without arguments
+    MethodCallNode(const IdentifierNode& n) : name(n), args() {}
     ~MethodCallNode() {
-        if (args.size() == 0) return;
         for (ExprNode* arg : args) delete arg;
     }
 };
@@ -72,7 +72,7 @@ public:
     AssignmentNode(IdentifierNode& l, ExprNode& r) : lhs(l), rhs(r) {}
 };
 
-class BlockNode : public ExprNode {
+class BlockNode : public StmtNode {
 public:
     StmtList stmts;
     BlockNode() {}
