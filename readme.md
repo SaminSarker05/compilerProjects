@@ -1,4 +1,5 @@
-## Projects
+```
+## Project Descriptions
 
 ### mango_compiler/
 C-like compiler built with C++, Flex, Bison, and LLVM that compiles to LLVM IR and executes with JIT.
@@ -48,4 +49,5 @@ Build:
 
 ## Note
 
-Each project is self-contained and can be studied independently.
+Each project is self-contained.
+```
