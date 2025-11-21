@@ -1,19 +1,25 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -Werror -g -I.
-PARSER = bison
-LEXER = flex
+TARGET = mango
+LLVM_CONFIG = llvm-config-18
 
-parser: parser.cpp lexer.cpp
-	g++ -o parser parser.cpp lexer.cpp main.cpp
+all: parser.cpp lexer.cpp
+	g++ -std=c++17 \
+		`$(LLVM_CONFIG) --cxxflags` \
+		-fexceptions \
+		-o $(TARGET) \
+		main.cpp parser.cpp lexer.cpp generator.cpp \
+		`$(LLVM_CONFIG) --ldflags --libs core executionengine interpreter mcjit native --system-libs`
 
 parser.cpp: parser.y
 	bison -d -o parser.cpp parser.y
 
-parser.hpp: parser.cpp
+lexer.cpp: lexer.l parser.cpp
+	flex -o lexer.cpp lexer.l
 
-lexer.cpp: lexer.l parser.hpp
-	flex -o lexer.cpp $^
-
-.PHONY: clean
 clean:
-	rm -f *.o lexer.cpp parser.cpp parser.hpp parser
+	rm -f $(TARGET) parser.cpp parser.hpp lexer.cpp
+
+test: all
+	@echo "int x = 5;" | ./$(TARGET)
+	@echo "int a = 2; int b = 3; int c = a + b;" | ./$(TARGET)
+
+.PHONY: all clean test
