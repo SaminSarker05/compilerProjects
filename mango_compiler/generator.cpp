@@ -1,6 +1,7 @@
 #include "generator.hpp"
 #include "astnode.hpp"
 #include "parser.hpp"
+#include <llvm/Support/TargetSelect.h>
 
 // helper function to map language types to llvm types
 static llvm::Type* type_of(llvm::LLVMContext& context, const IdentifierNode& ident) {
@@ -100,7 +101,7 @@ llvm::Value* MethodCallNode::codeGen(GenCodeContext& context) {
     std::cout << "MethodCallNode::codeGen" << std::endl;
     llvm::Function* func = context.module->getFunction(name.name.c_str());
     if (func == nullptr) {
-        std::cerr << "Undefined function: " << name << std::endl;
+        std::cerr << "Undefined function: " << name.name << std::endl;
         return nullptr;
     }
     // generate code for each expression in argument list

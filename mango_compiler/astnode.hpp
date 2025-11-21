@@ -21,14 +21,17 @@ typedef std::vector<VarDeclNode*> VarDeclList;
 class Node {
 public:
     virtual ~Node() = default;
-    virtual llvm::Value* codeGen(GenCodeContext& context) = 0;
 };
 
 class ExprNode : public Node {  // produces values
+public:
+    virtual llvm::Value* codeGen(GenCodeContext& context) = 0;
 };
 
 // performs action, does not necessarily produce a value
 class StmtNode : public Node {
+public:
+    virtual llvm::Value* codeGen(GenCodeContext& context) = 0;
 };
 
 class IntegerNode : public ExprNode {
